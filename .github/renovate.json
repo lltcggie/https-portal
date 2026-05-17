@@ -12,6 +12,10 @@
   "commitMessagePrefix": "chore(deps):",
   "prHourlyLimit": 0,
   "prConcurrentLimit": 5,
+  "automerge": true,
+  "automergeType": "pr",
+  "automergeStrategy": "squash",
+  "platformAutomerge": true,
   "packageRules": [
     {
       "description": "nginx Docker image (ARG DIST=nginx:x.y.z in Dockerfile)",
