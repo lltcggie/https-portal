@@ -1,6 +1,9 @@
 ARG  DIST=nginx:1.31.0
 FROM $DIST
 
+# Re-declare after FROM so the value is available in subsequent RUN steps
+ARG  DIST
+
 # Set by `docker buildx build`
 ARG  TARGETPLATFORM
 
@@ -42,6 +45,9 @@ RUN wget -q https://raw.githubusercontent.com/diafygi/acme-tiny/$ACME_TINY_VERSI
 RUN rm /etc/nginx/conf.d/default.conf /etc/crontab
 
 COPY ./fs_overlay /
+
+RUN NGINX_VERSION=$(echo "$DIST" | sed -E 's/^nginx://') && \
+    sed -i "s/HTTPS-PORTAL v[^[:space:]]*/HTTPS-PORTAL v${NGINX_VERSION}/" /etc/cont-init.d/00-welcome
 
 RUN chmod a+x /bin/* && \
     chmod 0644 /etc/logrotate.d/nginx && \
