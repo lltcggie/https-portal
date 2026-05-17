@@ -1,0 +1,62 @@
+name: Tag nginx version
+
+# Dockerfile の ARG DIST=nginx:x.y.z を読み取り、対応するタグを自動作成する
+# Place this file at: .github/workflows/tag-nginx-version.yml
+
+on:
+  push:
+    branches:
+      - master-custom
+    paths:
+      - 'Dockerfile'
+  workflow_dispatch:        # 手動実行も可能
+
+permissions:
+  contents: write           # タグを push するために必要
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0    # 全タグを取得するために必要
+
+      - name: Extract nginx version from Dockerfile
+        id: version
+        run: |
+          # ARG DIST=nginx:1.31.0 のような行から 1.31.0 を抽出
+          VERSION=$(grep -oE '^ARG[[:space:]]+DIST=nginx:[^[:space:]]+' Dockerfile \
+            | sed -E 's/^ARG[[:space:]]+DIST=nginx://')
+
+          if [ -z "$VERSION" ]; then
+            echo "::error::Failed to extract nginx version from Dockerfile"
+            exit 1
+          fi
+
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Detected nginx version: ${VERSION}"
+
+      - name: Check if tag already exists
+        id: check
+        run: |
+          TAG="${{ steps.version.outputs.version }}"
+          if git rev-parse --verify --quiet "refs/tags/${TAG}" >/dev/null; then
+            echo "Tag ${TAG} already exists, skipping."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Tag ${TAG} does not exist yet."
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create and push tag
+        if: steps.check.outputs.exists == 'false'
+        env:
+          TAG: ${{ steps.version.outputs.version }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${TAG}" -m "nginx ${TAG}"
+          git push origin "${TAG}"
+          echo "Successfully created and pushed tag: ${TAG}"
