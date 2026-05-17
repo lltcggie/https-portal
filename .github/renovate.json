@@ -1,0 +1,36 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "timezone": "Asia/Tokyo",
+  "schedule": [
+    "* 9 * * *"
+  ],
+  "baseBranches": ["master-custom"],
+  "labels": ["dependencies", "docker"],
+  "commitMessagePrefix": "chore(deps):",
+  "prHourlyLimit": 0,
+  "prConcurrentLimit": 5,
+  "packageRules": [
+    {
+      "description": "nginx Docker image (ARG DIST=nginx:x.y.z in Dockerfile)",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["nginx"],
+      "versioning": "docker",
+      "groupName": "nginx"
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update nginx version in ARG DIST=nginx:x.y.z",
+      "managerFilePatterns": ["/(^|/)Dockerfile$/"],
+      "matchStrings": [
+        "ARG\\s+DIST=(?<depName>nginx):(?<currentValue>[^\\s]+)"
+      ],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
+    }
+  ]
+}
