@@ -1,4 +1,4 @@
-ARG  DIST=nginx:1.31.8
+ARG  DIST=nginx:1.31.9
 FROM $DIST
 
 # Re-declare after FROM so the value is available in subsequent RUN steps
